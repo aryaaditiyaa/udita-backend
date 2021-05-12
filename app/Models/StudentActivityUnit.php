@@ -7,17 +7,16 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class News extends Model
+class StudentActivityUnit extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'title', 'body', 'image_path'
+        'name', 'description', 'image_path', 'proposal_id', 'status'
     ];
 
     protected $appends = [
-        'image_url',
-        'author_name'
+        'image_path'
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -25,7 +24,7 @@ class News extends Model
         return Carbon::parse($date)->locale('id')->isoFormat('D MMMM Y');
     }
 
-    public function getImageUrlAttribute()
+    public function getImagePathAttribute()
     {
         if ($this->attributes['image_path'] != null) {
             return url(env('APP_URL') . '/udita/public') . '/storage/' . $this->attributes['image_path'];
@@ -33,15 +32,4 @@ class News extends Model
             return null;
         }
     }
-
-    public function getAuthorNameAttribute()
-    {
-        return News::find($this->attributes['id'])->user->name;
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
 }

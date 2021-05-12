@@ -98,6 +98,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'phone_number' => 'sometimes|string|max:13',
+            'role' => 'sometimes|string',
             'email' => 'sometimes|string|email|max:255',
             'password' => 'sometimes|string|min:8|confirmed',
             'profile_photo_path' => 'sometimes|image'
@@ -113,9 +114,10 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $user->update([
-            'name' => $request->name,
-            'phone_number' => $request->phone_number,
-            'email' => $request->email,
+            'name' => $request->name ? $request->name : $user->name,
+            'phone_number' => $request->phone_number? $request->phone_number : $user->phone_number,
+            'role' => $request->role ? $request->role : $user->role,
+            'email' => $request->email? $request->email : $user->email,
             'password' => $request->password ? bcrypt($request->password) : $user->password,
             'profile_photo_path' => $request->file('profile_photo_path') ? substr($profile_photo_path, 7) : $user->profile_photo_path,
         ]);

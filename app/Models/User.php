@@ -48,7 +48,7 @@ class User extends Authenticatable
     public function getProfilePhotoUrlAttribute()
     {
         if ($this->attributes['profile_photo_path'] != null) {
-            return url('http://192.168.100.5/udita/public') . '/storage/' . str_replace("\\", "/", $this->attributes['profile_photo_path']);
+            return url(env('APP_URL') . '/udita/public') . '/storage/' . $this->attributes['profile_photo_path'];
         } else {
             return 'https://ui-avatars.com/api/?name=' . urlencode($this->attributes['name']) . '&color=7F9CF5&background=EBF4FF';
         }
