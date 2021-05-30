@@ -12,11 +12,11 @@ class Notification extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'student_activity_unit_id', 'category', 'title', 'description', 'started_at', 'ended_at'
+        'user_id', 'student_activity_unit_id', 'category', 'title', 'description', 'target'
     ];
 
     protected function serializeDate(DateTimeInterface $date)
     {
-        return Carbon::parse($date)->locale('id')->isoFormat('D MMMM Y');
+        return Carbon::parse($date)->locale('id')->isoFormat('D MMMM Y | H:mm:ss');
     }
 }

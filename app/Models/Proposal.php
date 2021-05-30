@@ -6,13 +6,14 @@ use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Proposal extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'category', 'description', 'status', 'file_path', 'title'
+        'user_id', 'student_activity_unit_id', 'category', 'description', 'status', 'file_path', 'title'
     ];
 
     protected $appends = [
@@ -28,7 +29,7 @@ class Proposal extends Model
     public function getFileUrlAttribute()
     {
         if ($this->attributes['file_path'] != null) {
-            return url(env('APP_URL') . '/udita/public') . '/storage/' . $this->attributes['file_path'];
+            return 'http://192.168.100.5/udita/public' . Storage::url($this->attributes['file_path']);
         } else {
             return null;
         }

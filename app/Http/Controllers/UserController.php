@@ -84,6 +84,22 @@ class UserController extends Controller
         return ResponseFormatter::success($token, 'Token Revoked');
     }
 
+    public function index(Request $request)
+    {
+        $user = User::all();
+
+        if ($request->student_activity_unit_id) {
+            $user = User::where('student_activity_unit_id', $request->student_activity_unit_id)
+                ->orderBy('role', 'ASC')
+                ->latest()
+                ->get();
+        }
+
+        return ResponseFormatter::success([
+            'user' => $user
+        ], 'Fetch successful');
+    }
+
     public function show($id)
     {
         $user = User::findOrFail($id);
@@ -115,9 +131,9 @@ class UserController extends Controller
 
         $user->update([
             'name' => $request->name ? $request->name : $user->name,
-            'phone_number' => $request->phone_number? $request->phone_number : $user->phone_number,
+            'phone_number' => $request->phone_number ? $request->phone_number : $user->phone_number,
             'role' => $request->role ? $request->role : $user->role,
-            'email' => $request->email? $request->email : $user->email,
+            'email' => $request->email ? $request->email : $user->email,
             'password' => $request->password ? bcrypt($request->password) : $user->password,
             'profile_photo_path' => $request->file('profile_photo_path') ? substr($profile_photo_path, 7) : $user->profile_photo_path,
         ]);

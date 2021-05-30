@@ -2,84 +2,54 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ResponseFormatter;
 use App\Models\StudentActivityUnit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class StudentActivityUnitController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        //
+        $sau = StudentActivityUnit::where('status', 'active')->latest()->get();
+        return ResponseFormatter::success([
+            'sau' => $sau
+        ], 'Fetch all successful');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function show(Request $request, $id)
     {
-        //
+        $sau = StudentActivityUnit::findOrFail($id);
+        return ResponseFormatter::success([
+            'sau' => $sau
+        ], 'Fetch successful');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function update(Request $request, $id)
     {
-        //
-    }
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string|max:255',
+            'image_path' => 'sometimes|image'
+        ]);
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\StudentActivityUnit  $studentActivityUnit
-     * @return \Illuminate\Http\Response
-     */
-    public function show(StudentActivityUnit $studentActivityUnit)
-    {
-        //
-    }
+        if ($request->file('image_path')) {
+            $image_path = Storage::putFile(
+                'public/users/' . date('FY'),
+                $request->file('image_path')
+            );
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\StudentActivityUnit  $studentActivityUnit
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(StudentActivityUnit $studentActivityUnit)
-    {
-        //
-    }
+        $sau = StudentActivityUnit::findOrFail($id);
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\StudentActivityUnit  $studentActivityUnit
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, StudentActivityUnit $studentActivityUnit)
-    {
-        //
-    }
+        $sau->update([
+            'name' => $request->name ? $request->name : $sau->name,
+            'description' => $request->description ? $request->description : $sau->description,
+            'image_path' => $request->file('image_path') ? substr($image_path, 7) : $sau->image_path,
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\StudentActivityUnit  $studentActivityUnit
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(StudentActivityUnit $studentActivityUnit)
-    {
-        //
+        return ResponseFormatter::success([
+            'sau' => $sau
+        ], 'Update SAU successful');
     }
 }
