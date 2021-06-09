@@ -20,8 +20,8 @@ class StudentActivityUnit extends Model
         'image_url',
         'proposal_file_path',
         'total_members',
-//        'total_events',
-//        'total_routine_activities'
+        'total_events',
+        'total_routine_activities'
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -37,6 +37,22 @@ class StudentActivityUnit extends Model
     public function getTotalMembersAttribute()
     {
         return User::where('student_activity_unit_id', $this->attributes['id'])->count();
+    }
+
+    public function getTotalEventsAttribute()
+    {
+        return Activities::where('category', 'event')
+            ->where('student_activity_unit_id', $this->attributes['id'])
+            ->where('status', 'approved')
+            ->count();
+    }
+
+    public function getTotalRoutineActivitiesAttribute()
+    {
+        return Activities::where('category', 'routine')
+            ->where('student_activity_unit_id', $this->attributes['id'])
+            ->where('status', 'approved')
+            ->count();
     }
 
     public function getImageUrlAttribute()

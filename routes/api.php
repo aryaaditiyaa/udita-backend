@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\ActivitiesController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProposalController;
@@ -34,6 +37,14 @@ Route::apiResource('student_activity_unit', StudentActivityUnitController::class
     'index', 'show'
 ]);
 
+Route::apiResource('activities', ActivitiesController::class)->only([
+    'index', 'show'
+]);
+
+Route::apiResource('attendance', AttendanceController::class)->only([
+    'index'
+]);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [UserController::class, 'logout']);
 
@@ -65,4 +76,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::patch('user_read_notif_status', [UserReadAllNotificationsStatusController::class, 'updateStatus']);
 
+    Route::apiResource('activities', ActivitiesController::class)->only([
+        'store', 'update'
+    ]);
+
+    Route::apiResource('documentation', DocumentationController::class)->only([
+        'store'
+    ]);
+
+    Route::apiResource('attendance', AttendanceController::class)->only([
+        'store', 'update'
+    ]);
 });

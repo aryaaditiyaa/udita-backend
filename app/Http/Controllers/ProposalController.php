@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseFormatter;
+use App\Models\Activities;
 use App\Models\Notification;
 use App\Models\Proposal;
 use App\Models\StudentActivityUnit;
@@ -27,6 +28,17 @@ class ProposalController extends Controller
                 ->get();
         }
 
+        if ($request->keyword != null && auth()->user()->role == 'admin') {
+            $proposals = Proposal::where('title', 'LIKE', '%' . $request->keyword . '%')
+                ->latest()
+                ->get();
+        } else if ($request->keyword != null && auth()->user()->role != 'admin') {
+            $proposals = Proposal::where('title', 'LIKE', '%' . $request->keyword . '%')
+                ->where('user_id', auth()->user()->id)
+                ->latest()
+                ->get();
+        }
+
         return ResponseFormatter::success([
             'proposal' => $proposals
         ], 'Proposal fetch successfully');
@@ -38,13 +50,13 @@ class ProposalController extends Controller
             'title' => 'required|string',
             'category' => 'required|string',
             'description' => 'required|string',
-            'file_path' => 'mimes:doc,docx,pdf'
+            'file_path' => 'mimes:doc,docx,pdf|size:10240'
         ]);
 
         if ($validator->fails()) {
             return ResponseFormatter::error([
                 'error' => $validator->errors()
-            ], 'Something went wrong', Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], 'Ups, file yang kamu unggah lebih dari 10 MB', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         if ($request->file('file_path')) {
@@ -105,6 +117,17 @@ class ProposalController extends Controller
             ]);
 
             if ($proposal != null) {
+                Activities::create([
+                    'status' => 'pending',
+                    'proposal_id' => $proposal->id,
+                    'category' => 'event',
+                    'name' => $proposal->title,
+                    'description' => $proposal->description,
+                    'student_activity_unit_id' => auth()->user()->student_activity_unit_id == null ? null : auth()->user()->student_activity_unit_id,
+                    'started_at' => $request->started_at,
+                    'ended_at' => $request->ended_at,
+                ]);
+
                 Notification::create([
                     'user_id' => User::where('role', 'admin')->value('id'),
                     'student_activity_unit_id' => null,
@@ -140,7 +163,7 @@ class ProposalController extends Controller
             'category' => 'sometimes|string',
             'description' => 'sometimes|string',
             'status' => 'sometimes|string',
-            'file_path' => 'sometimes|mimes:doc,docx,pdf'
+            'file_path' => 'sometimes|mimes:doc,docx,pdf|size:10240'
         ]);
 
         if ($validator->fails()) {
@@ -159,29 +182,57 @@ class ProposalController extends Controller
         $proposal = Proposal::findOrFail($id);
 
         if ($request->status == 'approved') {
-            $isUserHasSau = User::where('id', $proposal->user_id)->value('student_activity_unit_id');
-            if ($isUserHasSau == null) {
-                $sau = StudentActivityUnit::create([
-                    'name' => $proposal->title,
-                    'description' => $proposal->description,
-                    'status' => 'active',
-                    'proposal_id' => $proposal->id
-                ]);
+            $status = 'approved';
+            $title = "Proposal" . $proposal->title . " yang kamu ajukan diterima";
 
-                User::whereId($proposal->user_id)->update([
-                    'student_activity_unit_id' => $sau->id,
-                    'role' => 'leader'
-                ]);
+            if ($proposal->category == 'new-sau') {
+                $isUserHasSau = User::where('id', $proposal->user_id)->value('student_activity_unit_id');
+                if ($isUserHasSau == null) {
+                    $sau = StudentActivityUnit::create([
+                        'name' => $proposal->title,
+                        'description' => $proposal->description,
+                        'status' => 'active',
+                        'proposal_id' => $proposal->id
+                    ]);
 
-                $status = 'approved';
-                $title = "Proposal" . $proposal->title . " yang kamu ajukan diterima";
-            } else {
-                return ResponseFormatter::error([
-                ], 'Ups, pengguna ini telah memiliki UKM', Response::HTTP_INTERNAL_SERVER_ERROR);
+                    User::whereId($proposal->user_id)->update([
+                        'student_activity_unit_id' => $sau->id,
+                        'role' => 'leader'
+                    ]);
+                } else {
+                    return ResponseFormatter::error([
+                    ], 'Ups, pengguna ini telah memiliki UKM', Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
             }
         } else if ($request->status == 'declined') {
             $status = 'declined';
-            $title = "Proposal" . $proposal->title . " yang kamu ajukan ditolak";
+            $title = "Proposal " . $proposal->title . " yang kamu ajukan ditolak";
+        }
+
+        if ($proposal->category == 'event') {
+            Activities::where('category', 'event')->where('proposal_id', $proposal->id)->update([
+                'status' => $status
+            ]);
+
+            $userGetNotificationList = User::where('student_activity_unit_id', $proposal->student_activity_unit_id)
+                ->pluck('id')
+                ->toArray();
+
+            foreach ($userGetNotificationList as $value) {
+                Notification::create([
+                    'user_id' => $value,
+                    'student_activity_unit_id' => $proposal->student_activity_unit_id,
+                    'category' => $proposal->category,
+                    'title' => 'Ada acara ' . $proposal->title . '. Yuk, ikutan!',
+                    'description' => null,
+                    'target' => 'user_id'
+                ]);
+
+                UserReadAllNotificationsStatus::updateOrCreate(
+                    ['user_id' => $value],
+                    ['is_read' => 0]
+                );
+            }
         }
 
         $proposal->update([
@@ -209,7 +260,6 @@ class ProposalController extends Controller
             'proposal' => $proposal
         ], 'Proposal updated successfully');
     }
-
 
     public function destroy($id)
     {

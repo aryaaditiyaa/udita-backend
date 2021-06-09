@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -51,11 +52,17 @@ class UserController extends Controller
     public function register(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|min:8|confirmed'
             ]);
+
+            if ($validator->fails()) {
+                return ResponseFormatter::error([
+                    'error' => $validator->errors()
+                ], 'Ups, Email telah digunakan', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
 
             User::create([
                 'name' => $request->name,
@@ -115,6 +122,8 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:255',
             'phone_number' => 'sometimes|string|max:13',
             'role' => 'sometimes|string',
+            'major' => 'sometimes|string',
+            'student_id_number' => 'sometimes|numeric',
             'email' => 'sometimes|string|email|max:255',
             'password' => 'sometimes|string|min:8|confirmed',
             'profile_photo_path' => 'sometimes|image'
@@ -133,6 +142,8 @@ class UserController extends Controller
             'name' => $request->name ? $request->name : $user->name,
             'phone_number' => $request->phone_number ? $request->phone_number : $user->phone_number,
             'role' => $request->role ? $request->role : $user->role,
+            'major' => $request->major ? $request->major : $user->major,
+            'student_id_number' => $request->student_id_number ? $request->student_id_number : $user->student_id_number,
             'email' => $request->email ? $request->email : $user->email,
             'password' => $request->password ? bcrypt($request->password) : $user->password,
             'profile_photo_path' => $request->file('profile_photo_path') ? substr($profile_photo_path, 7) : $user->profile_photo_path,
