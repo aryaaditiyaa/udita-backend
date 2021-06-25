@@ -22,8 +22,8 @@ class CreateActivitiesTable extends Migration
             $table->string('name');
             $table->text('description');
             $table->string('status')->nullable();
-            $table->timestamp('started_at');
-            $table->timestamp('ended_at');
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('ended_at')->nullable();
             $table->timestamps();
         });
     }

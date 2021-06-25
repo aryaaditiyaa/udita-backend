@@ -19,7 +19,7 @@ class DocumentationController extends Controller
 
             if ($activity) {
                 $validator = Validator::make($request->all(), [
-                    'file_path' => 'mimes:doc,docx,pdf|size:10240'
+                    'file_path' => 'mimes:doc,docx,pdf|max:10240'
                 ]);
 
                 if ($validator->fails()) {

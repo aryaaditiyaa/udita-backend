@@ -12,7 +12,6 @@ use App\Models\UserReadAllNotificationsStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
-use Exception;
 use Illuminate\Support\Facades\Validator;
 
 class ProposalController extends Controller
@@ -50,7 +49,7 @@ class ProposalController extends Controller
             'title' => 'required|string',
             'category' => 'required|string',
             'description' => 'required|string',
-            'file_path' => 'mimes:doc,docx,pdf|size:10240'
+            'file_path' => 'mimes:doc,docx,pdf|max:10240'
         ]);
 
         if ($validator->fails()) {
@@ -163,7 +162,7 @@ class ProposalController extends Controller
             'category' => 'sometimes|string',
             'description' => 'sometimes|string',
             'status' => 'sometimes|string',
-            'file_path' => 'sometimes|mimes:doc,docx,pdf|size:10240'
+            'file_path' => 'sometimes|mimes:doc,docx,pdf|max:10240'
         ]);
 
         if ($validator->fails()) {
@@ -183,7 +182,7 @@ class ProposalController extends Controller
 
         if ($request->status == 'approved') {
             $status = 'approved';
-            $title = "Proposal" . $proposal->title . " yang kamu ajukan diterima";
+            $title = "Proposal " . $proposal->title . " yang kamu ajukan diterima";
 
             if ($proposal->category == 'new-sau') {
                 $isUserHasSau = User::where('id', $proposal->user_id)->value('student_activity_unit_id');

@@ -15,7 +15,12 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->user_id) {
+        if ($request->user_id && $request->is_attended) {
+            $attendance = Attendance::where('user_id', $request->user_id)
+                ->where('is_attended', 1)
+                ->latest()
+                ->get();
+        } else if ($request->user_id) {
             $attendance = Attendance::where('user_id', $request->user_id)
                 ->latest()
                 ->get();
