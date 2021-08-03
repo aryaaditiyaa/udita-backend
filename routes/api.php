@@ -6,6 +6,7 @@ use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\ProposalLogController;
 use App\Http\Controllers\SauMemberRegistrationController;
 use App\Http\Controllers\StudentActivityUnitController;
 use App\Http\Controllers\UserController;
@@ -86,5 +87,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('attendance', AttendanceController::class)->only([
         'store', 'update'
+    ]);
+
+    Route::apiResource('proposal_log', ProposalLogController::class)->only([
+        'index'
     ]);
 });

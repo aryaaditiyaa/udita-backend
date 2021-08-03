@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Helpers\ResponseFormatter;
 use App\Models\Activities;
 use App\Models\Notification;
+use App\Models\pProposalLog;
 use App\Models\Proposal;
+use App\Models\ProposalLog;
 use App\Models\StudentActivityUnit;
 use App\Models\User;
 use App\Models\UserReadAllNotificationsStatus;
@@ -248,6 +250,12 @@ class ProposalController extends Controller
             'category' => 'proposal',
             'title' => $title,
             'target' => 'user_id'
+        ]);
+
+        ProposalLog::create([
+            'proposal_id' => $proposal->id,
+            'name' => auth()->user()->name,
+            'is_approved' => $status == 'approved' ? 1 : 0
         ]);
 
         UserReadAllNotificationsStatus::updateOrCreate(
